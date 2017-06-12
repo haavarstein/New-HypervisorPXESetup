@@ -12,7 +12,7 @@ Param(
   [string]$ipaddress = "192.168.2.200",
   [string]$subnet = "255.255.255.0",
   [string]$gateway = "192.168.2.1",
-  [string]$xsver = "7.2",
+  [string]$xsver = "7.1",
   [string]$esxver = "6.5",
   [string]$configLocation = "C:\TFTP\TFTP\pxelinux.cfg\config.csv",
   [string]$pxeConfig = "$tftppath" + "\pxelinux.cfg\default",
@@ -41,7 +41,7 @@ New-Item $path\ftp\xenserver\$xsver -type directory -Force | Out-Null
 New-Item $path\ftp\esxi\$esxver -type directory -Force | Out-Null
 
 # Download Latest XenServer ISO Image
-$url = "https://downloads.citrix.com/12613/XenServer-$xsver.0-install-cd.iso?__gda__=1496024608_351c83940a40af689aa4275cb3e65a3d"
+$url = "http://downloadns.citrix.com.edgesuite.net/11988/XenServer-7.1.0-s1-install-cd.iso"
 $output = "$path" + "\XenServer-$xsver.iso"
 Invoke-WebRequest -Uri $url -OutFile $output
 
