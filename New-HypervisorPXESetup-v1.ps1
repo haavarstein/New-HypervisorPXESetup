@@ -132,4 +132,4 @@ $default = Get-Content $tftpconfig
 $default.replace("C:\xenappblog", $path) | Out-File ($tftpconfig)
 
 # Start FTP/TFTP Program
-# Start-Process $tftppath\Serva64.exe
+Start-Process $tftppath\Serva64.exe
