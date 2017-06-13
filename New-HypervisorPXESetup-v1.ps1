@@ -13,7 +13,6 @@ Param(
   [string]$tftppath = "$path" + "\tftp",
   [string]$tftpconfig = "$tftppath" + "\Serva.ini",
   [string]$localip = (Get-NetIPAddress -PrefixOrigin Dhcp | Select-Object -ExpandProperty IPaddress),
-  [string]$configLocation = "C:\TFTP\TFTP\pxelinux.cfg\config.csv",
   [string]$pxeConfig = "$tftppath" + "\pxelinux.cfg\default",
   [string]$pxeConfigLocation = "$tftppath" + "\pxelinux.cfg\",
   [string]$xmlTemplate = "$ftppath" + "\xenserver\config\staticip.xml",
@@ -83,10 +82,10 @@ $shell.Namespace("$path\tftp”).copyhere($item)
 }
 
 # Download Custom Configuration
-Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/Serva.ini -OutFile $tftppath\Serva.ini
+Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/Serva.ini -OutFile $tftpconfig
 Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/staticip.xml -OutFile $xmlTemplate
 Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/ks.cfg -OutFile $ksTemplate
-Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/default -OutFile $tftppath\pxelinux.cfg\default
+Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/default -OutFile $pxeConfig
 
 # Creating XML for XenServer Unattended Installation
 $default = Get-Content $pxeConfig
