@@ -1,12 +1,12 @@
-﻿# Set Params
+# Set Params
 Param(
   [string]$servername = "NUC-01",
-  [string]$macaddress = "06-91-c9-1d-21-01",
-  [string]$ipaddress = "192.168.2.200",
+  [string]$macaddress = "00-50-56-1d-21-01",
+  [string]$ipaddress = "192.168.1.230",
   [string]$subnet = "255.255.255.0",
-  [string]$gateway = "192.168.2.1",
-  [string]$xsver = "7.1",
-  [string]$esxver = "6.5",
+  [string]$gateway = "192.168.1.1",
+  [string]$xsver = "7.6",
+  [string]$esxver = "6.7U1",
   [string]$folder = "xenappblog",
   [string]$path = "$env:SystemDrive" + "\$folder",
   [string]$ftppath = "$path" + "\ftp",
@@ -19,7 +19,7 @@ Param(
   [string]$xmlLocation = "$ftppath" + "\xenserver\config\",
   [string]$ksTemplate = "$ftppath" + "\esxi\config\ks.cfg",
   [string]$kslocation = "$ftppath" + "\esxi\config\",
-  [string]$bootcfg = "$ftppath" + "\esxi" + "\$esxver\BOOT.CFG"
+  [string]$bootcfg = "$tftppath" + "\esxi" + "\$esxver\BOOT.CFG"
 
   )
 
@@ -36,14 +36,16 @@ New-Item $path\ftp\esxi\config -type directory -Force | Out-Null
 New-Item $path\ftp\xenserver\scripts -type directory -Force | Out-Null
 New-Item $path\ftp\xenserver\spack -type directory -Force | Out-Null
 New-Item $path\ftp\xenserver\$xsver -type directory -Force | Out-Null
-New-Item $path\ftp\esxi\$esxver -type directory -Force | Out-Null
 
 # Download Latest XenServer ISO Image
-$url = "http://downloadns.citrix.com.edgesuite.net/11988/XenServer-7.1.0-s1-install-cd.iso"
+$ProgressPreference = 'SilentlyContinue'
+$url = "http://xenapptraining.s3.amazonaws.com/ISO/XenServer-7.6.0-install-cd.iso"
 $output = "$path" + "\XenServer-$xsver.iso"
-Invoke-WebRequest -Uri $url -OutFile $output
+Write-Verbose "Downloading Citrix Hypervisor $xsver" -Verbose
+Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $output
 
 # Copy The XenServer Content Of The ISO Image
+Write-Verbose "Copying the content of Citrix Hypervisor $xsver ISO" -Verbose
 $mountResult = Mount-DiskImage $output -PassThru
 $ISODrive = (Get-DiskImage -ImagePath $output | Get-Volume).DriveLetter
 $ISODriveLetter = "$ISODrive" + ":\"
@@ -58,22 +60,24 @@ copy-item -Recurse * -Destination "$path\tftp\" -Force
 Dismount-DiskImage $output
 
 # Download Latest ESXi ISO Image
-$url = "https://download2.vmware.com/software/esx/65/VMware-VMvisor-Installer-201701001-4887370.x86_64.iso?HashKey=af8ed9955fc71b6e07e605cd0f1451c9&params=%7B%22custnumber%22%3A%22cHRoZXAlaGRodA%3D%3D%22%2C%22sourcefilesize%22%3A%22328.26+MB%22%2C%22dlgcode%22%3A%22ESXI650A%22%2C%22evaldlgcode%22%3A%22EVAL-FREE-ESXI6-EN-2084%22%2C%22languagecode%22%3A%22en%22%2C%22source%22%3A%22EVALS%22%2C%22downloadtype%22%3A%22manual%22%2C%22downloaduuid%22%3A%2267b5a253-e4f7-404e-8c90-79f9c4bbeafc%22%7D&AuthKey=1496007727_8002110980c58b0f83fceb74d8a18cf0"
+$url = "http://xenapptraining.s3.amazonaws.com/ISO/VMware-VMvisor-Installer-6.7.0.update01-10302608.x86_64.iso"
 $output = "$path" + "\ESXi-$esxver.iso"
-Invoke-WebRequest -Uri $url -OutFile $output
+Write-Verbose "Downloading VMware ESXi $esxver" -Verbose
+Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $output
 
 # Copy The ESXi Content Of The ISO Image
+Write-Verbose "Copying the content of VMware ESXi $esxver ISO" -Verbose
 $mountResult = Mount-DiskImage $output -PassThru
 $ISODrive = (Get-DiskImage -ImagePath $output | Get-Volume).DriveLetter
 $ISODriveLetter = "$ISODrive" + ":\"
 cd $ISODriveLetter
-copy-item -Recurse * -Destination "$path\ftp\esxi\$esxver\" -Force
+xcopy *.* "$path\tftp\esxi\$esxver\" /y /e /q
 Dismount-DiskImage $output
 
 # Downlaod FTP/TFTP Program
 $urltftp = "http://www.vercot.com/~serva/download/Serva_Community_64_v3.0.0.zip"
 $outputtftp = "$path" + "\tftp\Serva.zip"
-Invoke-WebRequest -Uri $urltftp -OutFile $outputtftp
+Invoke-WebRequest -UseBasicParsing -Uri $urltftp -OutFile $outputtftp
 $shell = new-object -com shell.application
 $zip = $shell.NameSpace("$path\tftp\Serva.zip”)
 foreach($item in $zip.items())
@@ -82,10 +86,10 @@ $shell.Namespace("$path\tftp”).copyhere($item)
 }
 
 # Download Custom Configuration
-Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/Serva.ini -OutFile $tftpconfig
-Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/staticip.xml -OutFile $xmlTemplate
-Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/ks.cfg -OutFile $ksTemplate
-Invoke-WebRequest -Uri https://xenappblog.s3.amazonaws.com/download/autohv/default -OutFile $pxeConfig
+Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/Serva.ini -OutFile $tftpconfig
+Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/staticip.xml -OutFile $xmlTemplate
+Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/ks.cfg -OutFile $ksTemplate
+Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/default -OutFile $pxeConfig
 
 # Creating XML for XenServer Unattended Installation
 $default = Get-Content $pxeConfig
@@ -108,10 +112,7 @@ $xml.Save($xmlLocation + "\" + $servername + ".xml")
 # Customize ESXi Boot File
 (Get-Content "$bootcfg") `
     -Replace("/", "/esxi/$esxver/") |
-Out-File "$path\BOOT.CFG"
-Rename-Item $bootcfg BOOT.OLD
-Copy-Item $path\BOOT.CFG -Destination $path\ftp\esxi\$esxver
-remove-item $path\BOOT.CFG
+Out-File "$bootcfg"
 
 $default = Get-Content $kstemplate
 $default.replace("localhost", $servername) | Out-File $kstemplate
