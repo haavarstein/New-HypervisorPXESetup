@@ -1,7 +1,7 @@
 # New-HypervisorPXESetup
 Automated Installation of XenServer and ESXi through PXE
  boot.
-This script will automatically download, configure & start FTP/TFTP services used to automatically install Citrix XenServer and VMware ESXi completly hands off through PXE boot. At the moment only XenServer works 100% because there's no public download URL for ESXi.
+This script will automatically download, configure & start FTP/TFTP services used to automatically install Citrix XenServer and VMware ESXi completly hands off through PXE boot.
 
 The parameters Servername, Macaddress, IPAddress, Subnet and Gateway is the Hypervisor configuration.
 
