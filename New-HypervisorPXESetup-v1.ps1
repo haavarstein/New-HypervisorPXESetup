@@ -1,6 +1,6 @@
 # Set Params
 Param(
-  [string]$servername = "NUC-01",
+  [string]$servername = "NUC01",
   [string]$macaddress = "00-50-56-1d-21-01",
   [string]$ipaddress = "192.168.1.230",
   [string]$subnet = "255.255.255.0",
@@ -110,25 +110,26 @@ $xml.installation.'admin-interface'.gateway = $gateway
 $xml.Save($xmlLocation + "\" + $servername + ".xml")
 
 # Customize ESXi Boot File
-(Get-Content "$bootcfg") `
-    -Replace("/", "/esxi/$esxver/") |
-Out-File "$bootcfg"
+# (Get-Content "$bootcfg") `
+#    -Replace("/", "/esxi/$esxver/") |
+# Out-File "$bootcfg"
 
 $default = Get-Content $kstemplate
-$default.replace("localhost", $servername) | Out-File $kstemplate
+$default.replace("localhost", $servername) | Out-File $kstemplate -Encoding ASCII
 $default = Get-Content $kstemplate
-$default.replace("0.0.0.0", $ipaddress) | Out-File $kstemplate
+$default.replace("0.0.0.0", $ipaddress) | Out-File $kstemplate -Encoding ASCII
 $default = Get-Content $kstemplate
-$default.replace("255.255.255.0", $subnet) | Out-File $kstemplate
+$default.replace("255.255.255.0", $subnet) | Out-File $kstemplate -Encoding ASCII
 $default = Get-Content $kstemplate
-$default.replace("192.168.1.1", $gateway) | Out-File $kstemplate
+$default.replace("192.168.1.1", $gateway) | Out-File $kstemplate -Encoding ASCII
 copy-item $kstemplate -Destination $kslocation\$servername.cfg
 
 # FTP/TFTP Configuration with Local IP Address
 $default = Get-Content $tftpconfig
-$default.replace("0.0.0.0", $localip) | Out-File ($tftpconfig)
+$default.replace("0.0.0.0", $localip) | Out-File ($tftpconfig) -Encoding ASCII
 $default = Get-Content $tftpconfig
-$default.replace("C:\xenappblog", $path) | Out-File ($tftpconfig)
+$default.replace("C:\xenappblog", $path) | Out-File ($tftpconfig) -Encoding ASCII
 
 # Start FTP/TFTP Program
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 Start-Process $tftppath\Serva64.exe
