@@ -89,15 +89,32 @@ $shell.Namespace("$path\tftp”).copyhere($item)
 Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/Serva.ini -OutFile $tftpconfig
 Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/staticip.xml -OutFile $xmlTemplate
 Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/ks.cfg -OutFile $ksTemplate
-Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/default -OutFile $pxeConfig
+# Invoke-WebRequest -UseBasicParsing -Uri https://xenappblog.s3.amazonaws.com/download/autohv/default -OutFile $pxeConfig
 
-# Creating XML for XenServer Unattended Installation
-$default = Get-Content $pxeConfig
-$default.replace("mdt-01.ctxlab.local", $localip) | Out-File ($pxeConfig)
-$default = Get-Content $pxeConfig
-$default.replace("version", $esxver) | Out-File ($pxeConfig)
-$default = Get-Content $pxeConfig
-$default.replace("unattend", $servername) | Out-File ($pxeConfigLocation + "01-" + $macaddress)
+Write-Verbose "Creating PXE Configuration File" -Verbose
+$Text += "default menu.c32" + "`n"
+$Text += "prompt 0" + "`n"
+$Text += "timeout 180" + "`n"
+$Text += "ONTIMEOUT bootlocal" + "`n"
+$Text += "" + "`n"
+$Text += "menu title Automation Framework Master Class" + "`n"
+$Text += "" + "`n"                                    
+$Text += "label bootlocal" + "`n"
+$Text += "menu label Boot Local OS" + "`n"
+$Text += "localboot 0" + "`n"
+$Text += "" + "`n"
+$Text += "label xenserver" + "`n"
+$Text += "menu label Install Citrix Hypervisor $xsver" + "`n"
+$Text += "kernel mboot.c32" + "`n"
+$Text += "append xenserver/xen.gz dom0_max_vcpus=2 dom0_mem=1024M,max:1024M com1=115200,8n1 console=com1,vga --- xenserver/vmlinuz xencons=hvc console=hvc0 console=tty0 answerfile=ftp://$localip/xenserver/config/$servername.xml install --- xenserver/install.img" + "`n"
+$Text += "" + "`n"
+$Text += "label esxi" + "`n"
+$Text += "menu label Install VMware ESXi $esxver" + "`n"
+$Text += "kernel /esxi/$esxver/mboot.c32" + "`n"
+$Text += "append -c /esxi/$esxver/boot.cfg ks=ftp://$localip/esxi/config/$servername.cfg" + "`n"
+
+Set-Content $pxeConfig -value ($Text) -Encoding ASCII
+
 $default = Get-Content $xmlTemplate
 $default.replace("mdt-01.ctxlab.local", $localip) | Out-File ($xmlTemplate)
 $default = Get-Content $xmlTemplate
@@ -109,10 +126,10 @@ $xml.installation.'admin-interface'.'subnet-mask' = $subnet
 $xml.installation.'admin-interface'.gateway = $gateway
 $xml.Save($xmlLocation + "\" + $servername + ".xml")
 
+
 # Customize ESXi Boot File
-# (Get-Content "$bootcfg") `
-#    -Replace("/", "/esxi/$esxver/") |
-# Out-File "$bootcfg"
+((Get-Content $bootcfg) -join "`n") + "`n" | Set-Content $bootcfg
+((Get-Content $bootcfg) -Replace "/", "/esxi/$esxver/") | Set-Content $bootcfg
 
 $default = Get-Content $kstemplate
 $default.replace("localhost", $servername) | Out-File $kstemplate -Encoding ASCII
