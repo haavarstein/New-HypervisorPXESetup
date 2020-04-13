@@ -79,10 +79,10 @@ $urltftp = "http://www.vercot.com/~serva/download/Serva_Community_64_v3.0.0.zip"
 $outputtftp = "$path" + "\tftp\Serva.zip"
 Invoke-WebRequest -UseBasicParsing -Uri $urltftp -OutFile $outputtftp
 $shell = new-object -com shell.application
-$zip = $shell.NameSpace("$path\tftp\Serva.zip”)
+$zip = $shell.NameSpace("$path\tftp\Serva.zip")
 foreach($item in $zip.items())
 {
-$shell.Namespace("$path\tftp”).copyhere($item)
+$shell.Namespace("$path\tftp").copyhere($item)
 }
 
 # Download Custom Configuration
